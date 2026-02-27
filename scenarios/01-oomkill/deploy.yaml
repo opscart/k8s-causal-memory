@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: oma-demo
+  labels:
+    purpose: k8s-causal-memory-poc
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oom-app-config
+  namespace: oma-demo
+data:
+  app.env: "poc"
+  memory.target.mb: "128"
+  log.level: "debug"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oom-victim
+  namespace: oma-demo
+  labels:
+    app: oom-victim
+    scenario: "01-oomkill"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oom-victim
+  template:
+    metadata:
+      labels:
+        app: oom-victim
+    spec:
+      containers:
+      - name: oom-victim
+        image: polinux/stress
+        command: ["stress", "--vm", "1", "--vm-bytes", "128M", "--vm-hang", "0", "--timeout", "300s"]
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+        env:
+        - name: APP_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: oom-app-config
+              key: app.env
+        - name: MEMORY_TARGET_MB
+          valueFrom:
+            configMapKeyRef:
+              name: oom-app-config
+              key: memory.target.mb

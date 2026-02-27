@@ -1,0 +1,35 @@
+# Go
+collector/bin/
+*.exe
+*.test
+*.out
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+storage/venv/
+storage/*.egg-info/
+storage/*.pyc
+storage/memory.db
+.env
+collector/bin/
+
+# SQLite database (runtime artifact)
+storage/*.db
+storage/*.sqlite
+
+# Collector output (runtime artifact)
+collector/output/
+*.jsonl
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp

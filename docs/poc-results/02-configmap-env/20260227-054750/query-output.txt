@@ -1,0 +1,17 @@
+================================================================
+ k8s-causal-memory POC Results
+ Scenario: 02-configmap-env
+ Run:      20260227-054750
+ Cluster:  opscart
+================================================================
+
+=== SUMMARY ===
+
+=== Q1: CAUSAL CHAIN (most recent OOMKill) ===
+
+=== Q2: PATTERN HISTORY P001 ===
+
+=== Q2: PATTERN HISTORY P002 ===
+
+=== Q2: PATTERN HISTORY P003 ===
+
