@@ -34,3 +34,4 @@ Thumbs.db
 .idea/
 *.swp
 docs/poc-results/**/memory.db
+docs/poc-results/**/memory.db
