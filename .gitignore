@@ -35,3 +35,6 @@ Thumbs.db
 *.swp
 docs/poc-results/**/memory.db
 docs/poc-results/**/memory.db
+docs/poc-results/**/memory.db
+docs/poc-results/**/memory.db-shm
+docs/poc-results/**/memory.db-wal
