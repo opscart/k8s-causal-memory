@@ -1,0 +1,60 @@
+================================================================
+ k8s-causal-memory POC Results
+ Scenario: aks-final
+ Run:      20260301-aks
+================================================================
+
+=== SUMMARY ===
+Events: 20  |  Causal edges: 8  |  Snapshots: 1
+
+=== Pattern Distribution ===
+  P001 : 14 events
+
+=== Top Pods ===
+  oom-victim-68f4d5ffd7-bvpcv (oma-demo) — 16 events — last: 2026-03-01T17:19:44.129551-05:00
+
+=== Q1: Causal Chain (most recent OOMKill) ===
+  Pod: oom-victim-68f4d5ffd7-bvpcv  Namespace: oma-demo
+
+  OOMKill  2026-03-01T17:19:44.129551-05:00
+    Node: aks-nodepool1-78296979-vmss000000
+    Limits: cpu=100m  memory=64Mi
+    ConfigMaps in effect: ['oom-app-config']
+    Exit code: 137  Restart count: 3
+
+  Causal edges:
+
+=== Q2: Pattern History P001 (OOMKill) ===
+  2026-03-01T17:19:44.129551-05:00  OOMKill  oom-victim-68f4d5ffd7-bvpcv  oma-demo  aks-nodepool1-78296979-vmss000000
+  2026-03-01T17:19:43.332873-05:00  OOMKill  oom-victim-68f4d5ffd7-bvpcv  oma-demo  aks-nodepool1-78296979-vmss000000
+  2026-03-01T17:19:43.096049-05:00  OOMKillEvidence  oom-victim-68f4d5ffd7-bvpcv  oma-demo  aks-nodepool1-78296979-vmss000000
+  2026-03-01T17:19:43.094956-05:00  OOMKill  oom-victim-68f4d5ffd7-bvpcv  oma-demo  aks-nodepool1-78296979-vmss000000
+  2026-03-01T17:19:42.89837-05:00  OOMKillEvidence  oom-victim-68f4d5ffd7-bvpcv  oma-demo  aks-nodepool1-78296979-vmss000000
+  2026-03-01T17:19:42.093267-05:00  OOMKillEvidence  oom-victim-68f4d5ffd7-bvpcv  oma-demo  aks-nodepool1-78296979-vmss000000
+  2026-03-01T17:19:30.398-05:00  OOMKillEvidence  oom-victim-68f4d5ffd7-bvpcv  oma-demo  aks-nodepool1-78296979-vmss000000
+  2026-03-01T17:19:15.044811-05:00  OOMKillEvidence  oom-victim-68f4d5ffd7-bvpcv  oma-demo  aks-nodepool1-78296979-vmss000000
+  2026-03-01T17:19:15.043434-05:00  OOMKill  oom-victim-68f4d5ffd7-bvpcv  oma-demo  aks-nodepool1-78296979-vmss000000
+  2026-03-01T17:19:14.029824-05:00  OOMKillEvidence  oom-victim-68f4d5ffd7-bvpcv  oma-demo  aks-nodepool1-78296979-vmss000000
+  2026-03-01T17:19:02.010633-05:00  OOMKillEvidence  oom-victim-68f4d5ffd7-bvpcv  oma-demo  aks-nodepool1-78296979-vmss000000
+  2026-03-01T17:19:01.00643-05:00  OOMKillEvidence  oom-victim-68f4d5ffd7-bvpcv  oma-demo  aks-nodepool1-78296979-vmss000000
+  2026-03-01T17:19:01.00616-05:00  OOMKill  oom-victim-68f4d5ffd7-bvpcv  oma-demo  aks-nodepool1-78296979-vmss000000
+  2026-03-01T17:19:00.082925-05:00  OOMKill  oom-victim-68f4d5ffd7-bvpcv  oma-demo  aks-nodepool1-78296979-vmss000000
+
+=== Q2: Pattern History P002 (ConfigMap Env) ===
+  2026-03-01T17:20:59.09221-05:00  ConfigMapChanged  namespace=oma-demo
+  2026-03-01T17:20:12.223387-05:00  ConfigMapChanged  namespace=oma-demo
+  2026-03-01T17:19:47.793805-05:00  ConfigMapChanged  namespace=oma-demo
+  2026-03-01T17:19:42.803988-05:00  ConfigMapChanged  namespace=oma-demo
+
+=== Q3: Point-in-Time Snapshots ===
+  Pod/oom-victim-68f4d5ffd7-bvpcv (oma-demo)  at=2026-03-01T17:19:44.135219-05:00  trigger=PodDeleted
+
+=== Raw Causal Edges ===
+  OOMKill → OOMKillEvidence  (conf=1.0, pattern=P001)
+  OOMKill → OOMKillEvidence  (conf=1.0, pattern=P001)
+  OOMKill → OOMKillEvidence  (conf=1.0, pattern=P001)
+  OOMKill → OOMKillEvidence  (conf=1.0, pattern=P001)
+  OOMKill → OOMKillEvidence  (conf=1.0, pattern=P001)
+  OOMKill → OOMKillEvidence  (conf=1.0, pattern=P001)
+  OOMKill → OOMKillEvidence  (conf=1.0, pattern=P001)
+  OOMKill → OOMKillEvidence  (conf=1.0, pattern=P001)

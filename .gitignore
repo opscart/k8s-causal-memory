@@ -38,3 +38,8 @@ docs/poc-results/**/memory.db
 docs/poc-results/**/memory.db
 docs/poc-results/**/memory.db-shm
 docs/poc-results/**/memory.db-wal
+storage/aks-memory.db
+storage/aks-memory.db-shm
+storage/aks-memory.db-wal
+storage/memory.db-shm
+storage/memory.db-wal
