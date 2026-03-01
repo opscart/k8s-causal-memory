@@ -1,11 +1,11 @@
 ================================================================
  k8s-causal-memory POC Results
- Scenario: 03-configmap-mount
- Run:      20260227-055145
+ Scenario: 01-oomkill
+ Run:      20260227-053830
 ================================================================
 
 === SUMMARY ===
-Events: 32  |  Causal edges: 13  |  Snapshots: 1
+Events: 30  |  Causal edges: 13  |  Snapshots: 1
 
 === Pattern Distribution ===
   P001 : 22 events
@@ -49,8 +49,6 @@ Events: 32  |  Causal edges: 13  |  Snapshots: 1
   2026-02-27T00:08:57.672397-05:00  OOMKill  oom-victim-86d4df8c4f-n2qcb  oma-demo  opscart-m02
 
 === Q2: Pattern History P002 (ConfigMap Env) ===
-  2026-02-27T00:50:30.015747-05:00  ConfigMapChanged  namespace=oma-demo
-  2026-02-27T00:47:30.10629-05:00  ConfigMapChanged  namespace=oma-demo
   2026-02-27T00:10:52.437882-05:00  ConfigMapChanged  namespace=oma-demo
   2026-02-27T00:10:52.436553-05:00  ConfigMapChanged  namespace=oma-demo
   2026-02-27T00:10:47.287272-05:00  ConfigMapChanged  namespace=oma-demo
