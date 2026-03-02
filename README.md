@@ -1,124 +1,280 @@
 # k8s-causal-memory
 
-> **Operational Memory Architecture (OMA) — Reference Implementation**  
-> A research proof-of-concept demonstrating causal memory capture for Kubernetes clusters.
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Language: Go](https://img.shields.io/badge/Collector-Go-00ADD8.svg)](collector/)
-[![Language: Python](https://img.shields.io/badge/Storage-Python-3776AB.svg)](storage/)
+**Operational Memory Architecture (OMA) for Kubernetes** — an open-source system that captures, stores, and queries causal event chains in Kubernetes clusters, preserving diagnostic context that the platform's native event retention model discards within 90 seconds.
 
 ---
 
 ## The Problem
 
-Cloud-native systems optimize for convergence but discard the causal history behind
-failures. Kubernetes self-heals in seconds — faster than humans can observe. By the
-time an engineer investigates, the evidence has rotated.
+When a Kubernetes pod crashes, the platform gives you approximately **90 seconds** to capture the evidence before it's overwritten. The `LastTerminationState` field — which records the exact reason, exit code, and resource context of a container failure — is replaced the moment a new restart cycle begins.
 
-This repository implements the core layers of **Operational Memory Architecture (OMA)**:
-a structured memory layer that preserves events, decisions, intent, and causal
-relationships — enabling safer, more intelligent infrastructure operations.
+```
+T=0s    OOMKill fires      ← exit_code=137, memory=64Mi, ConfigMap=oom-app-config
+T=15s   Pod restarts       ← LastTerminationState overwritten
+T=90s   kubectl describe   ← Error: evidence rotated, partial data only
+T+5min  On-call arrives    ← kubectl get pod: Error from server (NotFound)
+```
 
-> Related research: ["When Kubernetes Forgets: The 90-Second Evidence Gap"](https://opscart.com/when-kubernetes-forgets-the-90-second-evidence-gap/)  
-> Companion article: ["When Kubernetes Restarts Your Pod"](https://opscart.com/when-kubernetes-restarts-your-pod/)
+Existing tools — Prometheus, Grafana, ELK — record *what* happened. None preserve the causal context linking *why* it happened, *which configuration was active*, or *what the cluster state was at the exact moment of failure*.
+
+---
+
+## What OMA Captures
+
+Three causal patterns encoded as first-class definitions:
+
+| Pattern | Trigger | What OMA Preserves |
+|---------|---------|-------------------|
+| **P001** OOMKill Chain | Container OOMKilled | Exit code, resource limits, ConfigMaps in effect, node state — frozen at kill time |
+| **P002** ConfigMap Env Var Stale | ConfigMap updated | Content hash delta, changed keys, list of pods still running with old values |
+| **P003** ConfigMap Mount Swap | ConfigMap updated | Kubelet symlink swap timestamp, propagation latency measurement |
 
 ---
 
 ## Architecture
 
+OMA comprises four layers:
+
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Kubernetes Cluster                    │
-│  Pod Events │ OOMKill │ ConfigMap Changes │ Node State  │
-└──────────────────────────┬──────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│              Kubernetes API Server                   │
+│        (Pod / Node / ConfigMap watch streams)        │
+└──────────────┬──────────────────┬───────────────────┘
+               │                  │
+┌──────────────▼──────────────────▼───────────────────┐
+│  Layer 1 — Go Collector (collector/)                 │
+│  PodWatcher │ NodeWatcher │ ConfigMapWatcher         │
+│  Captures events with full payload at moment of      │
+│  occurrence → output/events.jsonl                    │
+└──────────────────────────┬──────────────────────────┘
                            │
-                ┌──────────▼──────────┐
-                │   collector/ (Go)   │
-                │  Watches K8s API    │
-                │  Captures decisions │
-                │  Encodes patterns   │
-                └──────────┬──────────┘
-                           │ structured JSON events
-                ┌──────────▼──────────┐
-                │  storage/ (Python)  │
-                │  SQLite memory store│
-                │  Causal edge index  │
-                │  Point-in-time snap │
-                └──────────┬──────────┘
+┌──────────────────────────▼──────────────────────────┐
+│  Layer 2 — Operational Memory Store (storage/)       │
+│  SQLite (WAL mode) — 4 tables:                       │
+│  events │ causal_edges │ snapshots │ patterns        │
+│  Causal edges built automatically on ingest          │
+└──────────────────────────┬──────────────────────────┘
                            │
-                ┌──────────▼──────────┐
-                │   Query Interface   │
-                │  "What caused this?"│
-                │  "Has this happened │
-                │   before?"          │
-                │  "State at time T?" │
-                └─────────────────────┘
+┌──────────────────────────▼──────────────────────────┐
+│  Layer 3 — Query Interface (storage/query.py)        │
+│  Q1: causal-chain   "What caused this failure?"      │
+│  Q2: pattern-history "Has this happened before?"     │
+│  Q3: state-at       "What was the state at time T?"  │
+└──────────────────────────┬──────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────┐
+│  Layer 4 — Integration Surface (storage/api.py)      │
+│  REST API │ Alert webhooks │ AI diagnosis integrations│
+└─────────────────────────────────────────────────────┘
 ```
-
----
-
-## Layers Implemented
-
-| Layer | Status | Language | Description |
-|---|---|---|---|
-| Collector | ✅ Working | Go | K8s watcher + decision capture |
-| Storage | ✅ Working | Python | SQLite-backed causal memory store |
-| Correlator | 📋 Spec | — | Causal graph builder |
-| Policy | 📋 Spec | — | Bounded autonomy engine |
-| AI Query | 📋 Spec | — | LLM context injection layer |
 
 ---
 
 ## Quick Start
 
+### Prerequisites
+
+- Go 1.21+
+- Python 3.11+
+- kubectl configured against a cluster
+- Minikube (for local testing) or any Kubernetes cluster
+
+### Build the Collector
+
 ```bash
-# Prerequisites: kubectl configured, minikube running
-make setup
-make build
-make scenario-01   # OOMKill POC
+cd collector
+go build -o bin/collector .
+```
+
+### Run a Scenario
+
+**Terminal 1 — Start the collector:**
+```bash
+./collector/bin/collector --namespace oma-demo --output ./output
+```
+
+**Terminal 2 — Run a scenario:**
+```bash
+bash scenarios/01-oomkill/trigger.sh
+```
+
+### Ingest and Query
+
+```bash
+cd storage
+pip install -r requirements.txt
+python ingest.py --events ../output/events.jsonl --snapshots ../output/snapshots.jsonl
+python query.py summary
+python query.py causal-chain --pod <pod-name> --namespace oma-demo
+python query.py pattern-history --pattern P001
 ```
 
 ---
 
-## POC Scenarios
+## Proof of Concept Results
 
-| Scenario | Description | Causal Pattern |
-|---|---|---|
-| [01-oomkill](scenarios/01-oomkill/) | Pod OOMKill + evidence rotation | Memory pressure → OOMKill → Evidence loss |
-| [02-configmap-env](scenarios/02-configmap-env/) | Silent env var misconfiguration | ConfigMap update → No restart → Stale config |
-| [03-configmap-mount](scenarios/03-configmap-mount/) | Volume mount symlink swap | ConfigMap update → Symlink swap → inotify |
+All results are reproducible from the JSONL files committed in `docs/poc-results/`. The collector was run on two independent cluster environments.
+
+### Environment 1 — Minikube (local, 3 nodes)
+
+**Scenario 01: OOMKill Causal Chain (P001)**
+
+```
+Events: 30  |  Causal edges: 13  |  Snapshots: 1
+Pattern P001: 22 events across 4 restart cycles
+
+Q1 Causal Chain:
+  OOMKill  2026-02-27T00:10:48
+    Node: opscart-m02
+    Limits: cpu=100m  memory=64Mi
+    ConfigMaps in effect: ['oom-app-config']
+    Exit code: 1  Restart count: 4
+
+⚠ Pattern P001 has fired 22 times — escalate to human review.
+```
+
+**Scenario 02: ConfigMap Env Var (P002)**
+
+```
+ConfigMapChanged  app-feature-config
+  old_hash: 72f628cdff16ed24 → new_hash: 960c779cc1c53b0f
+  changed_keys: [feature.flag, db.pool.size, api.timeout.ms, log.level]
+
+Pod status after change:
+  config-consumer-env-*: FEATURE_FLAG=disabled  ← STALE (ConfigMap now: enabled)
+  config-consumer-env-*: FEATURE_FLAG=disabled  ← STALE
+  Restart count: 0  (no restart triggered — this is the bug)
+```
+
+### Environment 2 — Azure Kubernetes Service (AKS 1.32.10, 2× Standard_B2s)
+
+```
+Events: 20  |  Causal edges: 8  |  Snapshots: 1
+Node: aks-nodepool1-78296979-vmss000000
+
+Q1 Causal Chain:
+  OOMKill  2026-03-01T17:19:44
+    Node: aks-nodepool1-78296979-vmss000000
+    Limits: cpu=100m  memory=64Mi
+    ConfigMaps in effect: ['oom-app-config']
+    Exit code: 137  Restart count: 3
+
+Raw Causal Edges (8 total, all conf=1.0):
+  OOMKill → OOMKillEvidence  (0.27ms gap)
+  OOMKill → OOMKillEvidence  (1.09ms gap)
+  ... (6 more)
+
+Q3 Point-in-Time Snapshot:
+  Pod/oom-victim-68f4d5ffd7-bvpcv (oma-demo)
+  Trigger: PodDeleted
+  Limits: {'oom-victim': {'cpu': '100m', 'memory': '64Mi'}}
+  ConfigMaps: ['oom-app-config']
+  Phase: Failed
+  ← kubectl returns 404 for this pod. OMA returns full state.
+```
+
+### What kubectl Cannot Do
+
+| Capability | kubectl | OMA |
+|-----------|---------|-----|
+| OOMKill evidence after restart | Lost in <90s | Preserved indefinitely |
+| Resource limits at kill time | Lost with pod | Frozen in snapshot |
+| ConfigMap in effect at failure | Not available | Captured with refs |
+| Stale env var detection | Not possible | P002 pattern |
+| State of deleted objects | `Error (NotFound)` | Q3 state-at query |
+| Causal chain reconstruction | Not possible | Q1 with edges |
+| Pattern recurrence detection | Not possible | Q2 with escalation |
 
 ---
 
-## Research Context
+## Repository Structure
 
-This repository supports two companion publications:
-
-- **InfoQ Article:** *Infrastructure Without Memory: The Missing Primitive in Cloud-Native Architecture*
-- **arXiv Paper:** *Operational Memory Architecture: A Structured Causal Memory Layer for Autonomous Kubernetes Operations*
-
-### Citation
-
-```bibtex
-@misc{khan2026k8scausalmemory,
-  author       = {Khan, Shamsher},
-  title        = {k8s-causal-memory: Operational Memory Architecture Reference Implementation},
-  year         = {2026},
-  publisher    = {GitHub},
-  url          = {https://github.com/opscart/k8s-causal-memory}
-}
+```
+k8s-causal-memory/
+├── collector/              # Go Kubernetes event collector
+│   ├── main.go
+│   ├── watcher/            # Pod, Node, ConfigMap watchers
+│   ├── patterns/           # P001, P002, P003 encoders
+│   └── emitter/            # JSONL output
+├── storage/                # Python storage and query layer
+│   ├── schema.sql          # SQLite schema (4 tables)
+│   ├── ingest.py           # JSONL → SQLite + causal edge construction
+│   ├── query.py            # Q1 / Q2 / Q3 canonical queries
+│   └── api.py              # REST API (Layer 4)
+├── scenarios/
+│   ├── 01-oomkill/         # P001: OOMKill causal chain
+│   ├── 02-configmap-env/   # P002: Env var silent misconfiguration
+│   └── 03-configmap-mount/ # P003: Volume mount symlink swap
+├── docs/
+│   ├── architecture.md
+│   └── poc-results/        # Committed JSONL + query outputs (reproducible)
+│       ├── 01-oomkill/
+│       ├── 02-configmap-env/
+│       ├── 03-configmap-mount/
+│       └── aks-final/      # AKS 1.32.10 run
+└── save-results.sh         # Preserve run output to docs/poc-results/
 ```
 
 ---
 
-## Author
+## Scenarios
 
-**Shamsher Khan** — Senior DevOps Engineer, GlobalLogic (Hitachi Group)  
-IEEE Senior Member | DZone Core Member  
-[opscart.com](https://opscart.com) · [LinkedIn](https://linkedin.com/in/shamsher-khan)
+### Scenario 01: OOMKill (P001)
+
+Deploys a pod with a 64Mi memory limit configured to allocate 128Mi. Captures the full OOMKill causal chain before the 90-second evidence horizon.
+
+```bash
+bash scenarios/01-oomkill/trigger.sh
+```
+
+### Scenario 02: ConfigMap Env Var Stale Config (P002)
+
+Deploys 2 pods consuming a ConfigMap as environment variables. Updates the ConfigMap and proves pods continue running with stale values — zero restarts, zero awareness.
+
+```bash
+bash scenarios/02-configmap-env/trigger.sh
+```
+
+### Scenario 03: ConfigMap Volume Mount Propagation (P003)
+
+Deploys a pod consuming a ConfigMap as a volume mount. Measures kubelet symlink swap propagation latency after a ConfigMap update.
+
+```bash
+bash scenarios/03-configmap-mount/trigger.sh
+```
+
+---
+
+## Canonical Queries
+
+```bash
+# Q1: What caused this OOMKill? (causal chain reconstruction)
+python query.py causal-chain --pod <pod-name> --namespace oma-demo
+
+# Q2: Has this pattern occurred before? (recurrence detection)
+python query.py pattern-history --pattern P001  # or P002, P003
+
+# Q3: What was the cluster state at time T? (point-in-time, even after deletion)
+python query.py state-at --kind Pod --name <pod-name> --namespace oma-demo --at "2026-03-01T17:19:44"
+```
+
+---
+
+## Contributing
+
+Additional pattern encoders, storage backends, and integration adapters are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Pattern contributions should follow the existing structure in `collector/patterns/` and include:
+- A causal pattern definition (trigger, evidence, effect, temporal windows)
+- A scenario trigger script in `scenarios/`
+- Expected output in `scenarios/<name>/expected-output.json`
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE)
+MIT License — see [LICENSE](LICENSE).
+
+---
+
+*Built and validated on Minikube and Azure Kubernetes Service 1.32.10.*
