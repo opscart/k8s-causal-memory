@@ -1,0 +1,20 @@
+================================================================
+ Stress Level: 20 concurrent OOMKill pods
+ Duration:     124s
+================================================================
+
+Events
+  Total captured:    355
+  Rate:              2.86 events/sec
+
+Causal Edges
+  Total built:       197
+  Latency min:       0.096 ms
+  Latency max:       52308.476 ms
+  Latency mean:      10589.4970152284 ms
+  Latency stddev:    12606.1684938624 ms
+
+Collector Resources (at 120s mark)
+  Memory:            8.8 MB
+  CPU:               0.0%
+================================================================

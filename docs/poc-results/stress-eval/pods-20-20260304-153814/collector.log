@@ -1,0 +1,534 @@
+========================================
+ k8s-causal-memory collector
+ Operational Memory Architecture (OMA)
+ github.com/opscart/k8s-causal-memory
+========================================
+[main] Kubernetes client connected
+[emitter] events    → /Users/opscart/Source/k8s-causal-memory/output/events.jsonl
+[emitter] snapshots → /Users/opscart/Source/k8s-causal-memory/output/snapshots.jsonl
+[main] namespace="oma-stress-test" | output=/Users/opscart/Source/k8s-causal-memory/output
+[main] Press Ctrl+C to stop
+----------------------------------------
+[node_watcher] Starting
+[pod_watcher] Starting namespace="oma-stress-test"
+[configmap_watcher] Starting namespace="oma-stress-test"
+[configmap_watcher] Cache primed: 2 configmaps
+[node_watcher] Cache primed: 3 nodes
+[emitter] OOMKill                pattern=P001  pod=oom-stress-02
+[pod_watcher] OOMKill: pod=oom-stress-02 ns=oma-stress-test exit=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-04
+[pod_watcher] OOMKill: pod=oom-stress-04 ns=oma-stress-test exit=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-01
+[pod_watcher] OOMKill: pod=oom-stress-01 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-04
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-02
+[emitter] OOMKill                pattern=P001  pod=oom-stress-03
+[pod_watcher] OOMKill: pod=oom-stress-03 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-01
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-03
+[emitter] OOMKill                pattern=P001  pod=oom-stress-18
+[pod_watcher] OOMKill: pod=oom-stress-18 ns=oma-stress-test exit=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-11
+[pod_watcher] OOMKill: pod=oom-stress-11 ns=oma-stress-test exit=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-15
+[pod_watcher] OOMKill: pod=oom-stress-15 ns=oma-stress-test exit=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-08
+[pod_watcher] OOMKill: pod=oom-stress-08 ns=oma-stress-test exit=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-10
+[pod_watcher] OOMKill: pod=oom-stress-10 ns=oma-stress-test exit=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-13
+[pod_watcher] OOMKill: pod=oom-stress-13 ns=oma-stress-test exit=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-19
+[pod_watcher] OOMKill: pod=oom-stress-19 ns=oma-stress-test exit=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-12
+[pod_watcher] OOMKill: pod=oom-stress-12 ns=oma-stress-test exit=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-06
+[pod_watcher] OOMKill: pod=oom-stress-06 ns=oma-stress-test exit=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-09
+[pod_watcher] OOMKill: pod=oom-stress-09 ns=oma-stress-test exit=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-07
+[pod_watcher] OOMKill: pod=oom-stress-07 ns=oma-stress-test exit=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-05
+[pod_watcher] OOMKill: pod=oom-stress-05 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-18
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-08
+[emitter] OOMKill                pattern=P001  pod=oom-stress-16
+[pod_watcher] OOMKill: pod=oom-stress-16 ns=oma-stress-test exit=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-03
+[pod_watcher] OOMKill: pod=oom-stress-03 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-03
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-10
+[emitter] OOMKill                pattern=P001  pod=oom-stress-20
+[pod_watcher] OOMKill: pod=oom-stress-20 ns=oma-stress-test exit=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-04
+[pod_watcher] OOMKill: pod=oom-stress-04 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-04
+[emitter] OOMKill                pattern=P001  pod=oom-stress-14
+[pod_watcher] OOMKill: pod=oom-stress-14 ns=oma-stress-test exit=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-17
+[pod_watcher] OOMKill: pod=oom-stress-17 ns=oma-stress-test exit=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-02
+[pod_watcher] OOMKill: pod=oom-stress-02 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-02
+[emitter] OOMKill                pattern=P001  pod=oom-stress-01
+[pod_watcher] OOMKill: pod=oom-stress-01 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-01
+[emitter] OOMKill                pattern=P001  pod=oom-stress-18
+[pod_watcher] OOMKill: pod=oom-stress-18 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-18
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-11
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-15
+[emitter] OOMKill                pattern=P001  pod=oom-stress-10
+[pod_watcher] OOMKill: pod=oom-stress-10 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-10
+[emitter] OOMKill                pattern=P001  pod=oom-stress-08
+[pod_watcher] OOMKill: pod=oom-stress-08 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-08
+[emitter] OOMKill                pattern=P001  pod=oom-stress-13
+[pod_watcher] OOMKill: pod=oom-stress-13 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-13
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-19
+[emitter] OOMKill                pattern=P001  pod=oom-stress-11
+[pod_watcher] OOMKill: pod=oom-stress-11 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-11
+[emitter] OOMKill                pattern=P001  pod=oom-stress-15
+[pod_watcher] OOMKill: pod=oom-stress-15 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-15
+[emitter] OOMKill                pattern=P001  pod=oom-stress-06
+[pod_watcher] OOMKill: pod=oom-stress-06 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-06
+[emitter] OOMKill                pattern=P001  pod=oom-stress-19
+[pod_watcher] OOMKill: pod=oom-stress-19 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-19
+[emitter] OOMKill                pattern=P001  pod=oom-stress-12
+[pod_watcher] OOMKill: pod=oom-stress-12 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-12
+[emitter] OOMKill                pattern=P001  pod=oom-stress-09
+[pod_watcher] OOMKill: pod=oom-stress-09 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-09
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-07
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-05
+[emitter] OOMKill                pattern=P001  pod=oom-stress-07
+[pod_watcher] OOMKill: pod=oom-stress-07 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-07
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-16
+[emitter] OOMKill                pattern=P001  pod=oom-stress-20
+[pod_watcher] OOMKill: pod=oom-stress-20 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-20
+[emitter] OOMKill                pattern=P001  pod=oom-stress-14
+[pod_watcher] OOMKill: pod=oom-stress-14 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-14
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-17
+[emitter] OOMKill                pattern=P001  pod=oom-stress-16
+[pod_watcher] OOMKill: pod=oom-stress-16 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-16
+[emitter] OOMKill                pattern=P001  pod=oom-stress-05
+[pod_watcher] OOMKill: pod=oom-stress-05 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-05
+[emitter] OOMKill                pattern=P001  pod=oom-stress-17
+[pod_watcher] OOMKill: pod=oom-stress-17 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-17
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-03
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-03
+[pod_watcher] CrashLoop: pod=oom-stress-03 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-02
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-02
+[pod_watcher] CrashLoop: pod=oom-stress-02 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-03
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-18
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-18
+[pod_watcher] CrashLoop: pod=oom-stress-18 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-02
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-18
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-01
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-01
+[pod_watcher] CrashLoop: pod=oom-stress-01 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-13
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-13
+[pod_watcher] CrashLoop: pod=oom-stress-13 restarts=1
+[emitter] OOMKill                pattern=P001  pod=oom-stress-03
+[pod_watcher] OOMKill: pod=oom-stress-03 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-03
+[emitter] OOMKill                pattern=P001  pod=oom-stress-18
+[pod_watcher] OOMKill: pod=oom-stress-18 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-18
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-19
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-19
+[pod_watcher] CrashLoop: pod=oom-stress-19 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-04
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-04
+[pod_watcher] CrashLoop: pod=oom-stress-04 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-13
+[emitter] OOMKill                pattern=P001  pod=oom-stress-02
+[pod_watcher] OOMKill: pod=oom-stress-02 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-02
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-15
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-15
+[pod_watcher] CrashLoop: pod=oom-stress-15 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-08
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-08
+[pod_watcher] CrashLoop: pod=oom-stress-08 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-10
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-10
+[pod_watcher] CrashLoop: pod=oom-stress-10 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-07
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-07
+[pod_watcher] CrashLoop: pod=oom-stress-07 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-09
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-09
+[pod_watcher] CrashLoop: pod=oom-stress-09 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-19
+[emitter] OOMKill                pattern=P001  pod=oom-stress-01
+[pod_watcher] OOMKill: pod=oom-stress-01 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-01
+[emitter] OOMKill                pattern=P001  pod=oom-stress-13
+[pod_watcher] OOMKill: pod=oom-stress-13 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-13
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-15
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-06
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-06
+[pod_watcher] CrashLoop: pod=oom-stress-06 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-14
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-14
+[pod_watcher] CrashLoop: pod=oom-stress-14 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-11
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-11
+[pod_watcher] CrashLoop: pod=oom-stress-11 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-10
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-04
+[emitter] OOMKill                pattern=P001  pod=oom-stress-19
+[pod_watcher] OOMKill: pod=oom-stress-19 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-19
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-12
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-12
+[pod_watcher] CrashLoop: pod=oom-stress-12 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-07
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-08
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-11
+[emitter] OOMKill                pattern=P001  pod=oom-stress-15
+[pod_watcher] OOMKill: pod=oom-stress-15 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-15
+[emitter] OOMKill                pattern=P001  pod=oom-stress-04
+[pod_watcher] OOMKill: pod=oom-stress-04 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-04
+[emitter] OOMKill                pattern=P001  pod=oom-stress-14
+[pod_watcher] OOMKill: pod=oom-stress-14 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-14
+[emitter] OOMKill                pattern=P001  pod=oom-stress-09
+[pod_watcher] OOMKill: pod=oom-stress-09 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-09
+[emitter] OOMKill                pattern=P001  pod=oom-stress-07
+[pod_watcher] OOMKill: pod=oom-stress-07 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-07
+[emitter] OOMKill                pattern=P001  pod=oom-stress-08
+[pod_watcher] OOMKill: pod=oom-stress-08 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-08
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-06
+[emitter] OOMKill                pattern=P001  pod=oom-stress-10
+[pod_watcher] OOMKill: pod=oom-stress-10 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-10
+[emitter] OOMKill                pattern=P001  pod=oom-stress-11
+[pod_watcher] OOMKill: pod=oom-stress-11 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-11
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-17
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-17
+[pod_watcher] CrashLoop: pod=oom-stress-17 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-05
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-05
+[pod_watcher] CrashLoop: pod=oom-stress-05 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-16
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-16
+[pod_watcher] CrashLoop: pod=oom-stress-16 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-12
+[emitter] OOMKill                pattern=P001  pod=oom-stress-06
+[pod_watcher] OOMKill: pod=oom-stress-06 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-06
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-14
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-14
+[pod_watcher] CrashLoop: pod=oom-stress-14 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-17
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-20
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-20
+[pod_watcher] CrashLoop: pod=oom-stress-20 restarts=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-16
+[emitter] OOMKill                pattern=P001  pod=oom-stress-12
+[pod_watcher] OOMKill: pod=oom-stress-12 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-12
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-05
+[emitter] OOMKill                pattern=P001  pod=oom-stress-20
+[pod_watcher] OOMKill: pod=oom-stress-20 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-20
+[emitter] OOMKill                pattern=P001  pod=oom-stress-17
+[pod_watcher] OOMKill: pod=oom-stress-17 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-17
+[emitter] OOMKill                pattern=P001  pod=oom-stress-16
+[pod_watcher] OOMKill: pod=oom-stress-16 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-16
+[emitter] OOMKill                pattern=P001  pod=oom-stress-05
+[pod_watcher] OOMKill: pod=oom-stress-05 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-05
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-03
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-03
+[pod_watcher] CrashLoop: pod=oom-stress-03 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-02
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-02
+[pod_watcher] CrashLoop: pod=oom-stress-02 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-18
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-18
+[pod_watcher] CrashLoop: pod=oom-stress-18 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-01
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-01
+[pod_watcher] CrashLoop: pod=oom-stress-01 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-19
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-19
+[pod_watcher] CrashLoop: pod=oom-stress-19 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-15
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-15
+[pod_watcher] CrashLoop: pod=oom-stress-15 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-13
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-13
+[pod_watcher] CrashLoop: pod=oom-stress-13 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-07
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-07
+[pod_watcher] CrashLoop: pod=oom-stress-07 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-06
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-06
+[pod_watcher] CrashLoop: pod=oom-stress-06 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-09
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-09
+[pod_watcher] CrashLoop: pod=oom-stress-09 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-08
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-08
+[pod_watcher] CrashLoop: pod=oom-stress-08 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-10
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-10
+[pod_watcher] CrashLoop: pod=oom-stress-10 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-04
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-04
+[pod_watcher] CrashLoop: pod=oom-stress-04 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-16
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-16
+[pod_watcher] CrashLoop: pod=oom-stress-16 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-20
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-20
+[pod_watcher] CrashLoop: pod=oom-stress-20 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-17
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-17
+[pod_watcher] CrashLoop: pod=oom-stress-17 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-11
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-11
+[pod_watcher] CrashLoop: pod=oom-stress-11 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-12
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-12
+[pod_watcher] CrashLoop: pod=oom-stress-12 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-05
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-05
+[pod_watcher] CrashLoop: pod=oom-stress-05 restarts=2
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-01
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-03
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-15
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-19
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-18
+[emitter] OOMKill                pattern=P001  pod=oom-stress-06
+[pod_watcher] OOMKill: pod=oom-stress-06 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-06
+[emitter] OOMKill                pattern=P001  pod=oom-stress-13
+[pod_watcher] OOMKill: pod=oom-stress-13 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-13
+[emitter] OOMKill                pattern=P001  pod=oom-stress-19
+[pod_watcher] OOMKill: pod=oom-stress-19 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-19
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-02
+[emitter] OOMKill                pattern=P001  pod=oom-stress-03
+[pod_watcher] OOMKill: pod=oom-stress-03 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-03
+[emitter] OOMKill                pattern=P001  pod=oom-stress-01
+[pod_watcher] OOMKill: pod=oom-stress-01 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-01
+[emitter] OOMKill                pattern=P001  pod=oom-stress-15
+[pod_watcher] OOMKill: pod=oom-stress-15 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-15
+[emitter] OOMKill                pattern=P001  pod=oom-stress-18
+[pod_watcher] OOMKill: pod=oom-stress-18 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-18
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-16
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-13
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-13
+[pod_watcher] CrashLoop: pod=oom-stress-13 restarts=3
+[emitter] OOMKill                pattern=P001  pod=oom-stress-02
+[pod_watcher] OOMKill: pod=oom-stress-02 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-02
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-09
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-07
+[emitter] OOMKill                pattern=P001  pod=oom-stress-07
+[pod_watcher] OOMKill: pod=oom-stress-07 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-07
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-10
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-17
+[emitter] OOMKill                pattern=P001  pod=oom-stress-16
+[pod_watcher] OOMKill: pod=oom-stress-16 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-16
+[emitter] OOMKill                pattern=P001  pod=oom-stress-09
+[pod_watcher] OOMKill: pod=oom-stress-09 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-09
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-11
+[emitter] OOMKill                pattern=P001  pod=oom-stress-10
+[pod_watcher] OOMKill: pod=oom-stress-10 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-10
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-20
+[emitter] OOMKill                pattern=P001  pod=oom-stress-17
+[pod_watcher] OOMKill: pod=oom-stress-17 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-17
+[emitter] OOMKill                pattern=P001  pod=oom-stress-11
+[pod_watcher] OOMKill: pod=oom-stress-11 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-11
+[emitter] OOMKill                pattern=P001  pod=oom-stress-08
+[pod_watcher] OOMKill: pod=oom-stress-08 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-08
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-08
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-08
+[pod_watcher] CrashLoop: pod=oom-stress-08 restarts=3
+[emitter] OOMKill                pattern=P001  pod=oom-stress-20
+[pod_watcher] OOMKill: pod=oom-stress-20 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-20
+[emitter] OOMKill                pattern=P001  pod=oom-stress-04
+[pod_watcher] OOMKill: pod=oom-stress-04 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-04
+[emitter] OOMKill                pattern=P001  pod=oom-stress-12
+[pod_watcher] OOMKill: pod=oom-stress-12 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-12
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-12
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-12
+[pod_watcher] CrashLoop: pod=oom-stress-12 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-14
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-05
+[emitter] OOMKill                pattern=P001  pod=oom-stress-05
+[pod_watcher] OOMKill: pod=oom-stress-05 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-05
+[emitter] OOMKill                pattern=P001  pod=oom-stress-14
+[pod_watcher] OOMKill: pod=oom-stress-14 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-14
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-19
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-19
+[pod_watcher] CrashLoop: pod=oom-stress-19 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-06
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-06
+[pod_watcher] CrashLoop: pod=oom-stress-06 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-01
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-01
+[pod_watcher] CrashLoop: pod=oom-stress-01 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-16
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-16
+[pod_watcher] CrashLoop: pod=oom-stress-16 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-09
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-09
+[pod_watcher] CrashLoop: pod=oom-stress-09 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-03
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-03
+[pod_watcher] CrashLoop: pod=oom-stress-03 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-18
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-18
+[pod_watcher] CrashLoop: pod=oom-stress-18 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-15
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-15
+[pod_watcher] CrashLoop: pod=oom-stress-15 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-02
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-02
+[pod_watcher] CrashLoop: pod=oom-stress-02 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-17
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-17
+[pod_watcher] CrashLoop: pod=oom-stress-17 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-07
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-07
+[pod_watcher] CrashLoop: pod=oom-stress-07 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-10
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-10
+[pod_watcher] CrashLoop: pod=oom-stress-10 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-11
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-11
+[pod_watcher] CrashLoop: pod=oom-stress-11 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-20
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-20
+[pod_watcher] CrashLoop: pod=oom-stress-20 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-05
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-05
+[pod_watcher] CrashLoop: pod=oom-stress-05 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-04
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-04
+[pod_watcher] CrashLoop: pod=oom-stress-04 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-14
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-14
+[pod_watcher] CrashLoop: pod=oom-stress-14 restarts=3
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-13
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-01
+[emitter] OOMKill                pattern=P001  pod=oom-stress-13
+[pod_watcher] OOMKill: pod=oom-stress-13 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-13
+[emitter] OOMKill                pattern=P001  pod=oom-stress-02
+[pod_watcher] OOMKill: pod=oom-stress-02 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-02
+[emitter] OOMKill                pattern=P001  pod=oom-stress-01
+[pod_watcher] OOMKill: pod=oom-stress-01 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-01
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-02
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-02
+[pod_watcher] CrashLoop: pod=oom-stress-02 restarts=4
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-18
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-10
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-03
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-15
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-07
+[emitter] OOMKill                pattern=P001  pod=oom-stress-10
+[pod_watcher] OOMKill: pod=oom-stress-10 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-10
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-04
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-17
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-12
+[emitter] OOMKill                pattern=P001  pod=oom-stress-18
+[pod_watcher] OOMKill: pod=oom-stress-18 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-18
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-11
+[emitter] OOMKill                pattern=P001  pod=oom-stress-03
+[pod_watcher] OOMKill: pod=oom-stress-03 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-03
+[emitter] OOMKill                pattern=P001  pod=oom-stress-12
+[pod_watcher] OOMKill: pod=oom-stress-12 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-12
+[emitter] OOMKill                pattern=P001  pod=oom-stress-04
+[pod_watcher] OOMKill: pod=oom-stress-04 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-04
+[emitter] OOMKill                pattern=P001  pod=oom-stress-07
+[pod_watcher] OOMKill: pod=oom-stress-07 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-07
+[emitter] OOMKill                pattern=P001  pod=oom-stress-17
+[pod_watcher] OOMKill: pod=oom-stress-17 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-17
+[emitter] OOMKill                pattern=P001  pod=oom-stress-15
+[pod_watcher] OOMKill: pod=oom-stress-15 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-15
+[emitter] OOMKill                pattern=P001  pod=oom-stress-11
+[pod_watcher] OOMKill: pod=oom-stress-11 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-11
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-06
+[emitter] OOMKill                pattern=P001  pod=oom-stress-06
+[pod_watcher] OOMKill: pod=oom-stress-06 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-06
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-19
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-14
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-01
+[emitter] CrashLoopBackOff       pattern=      pod=oom-stress-01
+[pod_watcher] CrashLoop: pod=oom-stress-01 restarts=4
+[emitter] OOMKill                pattern=P001  pod=oom-stress-14
+[pod_watcher] OOMKill: pod=oom-stress-14 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-14
+[emitter] OOMKill                pattern=P001  pod=oom-stress-09
+[pod_watcher] OOMKill: pod=oom-stress-09 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-09
+[emitter] OOMKill                pattern=P001  pod=oom-stress-19
+[pod_watcher] OOMKill: pod=oom-stress-19 ns=oma-stress-test exit=1
+[emitter] OOMKillEvidence        pattern=P001  pod=oom-stress-19
+[pod_watcher] Stopped.
+
+[main] Shutting down...
+[main] Done.
+[emitter] Closed.

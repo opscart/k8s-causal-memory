@@ -1,0 +1,18 @@
+================================================================
+ OMA Latency Statistics — 30 Runs
+ Scenario: 01-oomkill (P001)
+ Cluster:  opscart
+ Date:     Wed Mar  4 05:23:27 UTC 2026
+================================================================
+
+Per-run results: see summary.csv
+
+Global edge construction latency (ms):
+  Count:  242 observations
+  Min:    0.089 ms
+  Max:    31453.579 ms
+  Mean:   8087.217 ms
+  StdDev: 9644.404 ms
+  95th%:  approx 23952.262 ms
+
+================================================================
