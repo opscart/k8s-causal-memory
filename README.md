@@ -173,7 +173,55 @@ Q3 Point-in-Time Snapshot:
   ← kubectl returns 404 for this pod. OMA returns full state.
 ```
 
-### What kubectl Cannot Do
+**All scenarios on AKS:**
+
+| Scenario | Events | Key Metric | Result |
+|----------|--------|-----------|--------|
+| P001 OOMKill | 20 | Causal edges | 8 (conf=1.0), exit code 137, node aks-nodepool1-78296979-vmss000000 |
+| P002 ConfigMap env | 2 | Hash delta captured | 72f628cd → 8ee0c528, 4 keys changed |
+| P003 ConfigMap mount | 2 | Propagation latency | <30s symlink swap confirmed |
+
+---
+
+## Statistical Latency Analysis (30 Runs)
+
+To quantify causal edge construction latency, we ran the P001 OOMKill scenario
+30 independent times on Minikube, yielding 242 total causal edges.
+
+The distribution is **bimodal**, reflecting two structurally distinct edge types:
+
+| Edge Class | Count | Min | Mean | Max |
+|------------|-------|-----|------|-----|
+| Intra-cycle (<100ms) — same restart cycle | 88 | 0.089ms | **0.702ms** | 2.607ms |
+| Cross-cycle (≥100ms) — across restart boundaries | 154 | 903ms | 12,708ms | 31,454ms |
+
+- **Intra-cycle edges**: OOMKillEvidence captured within the same restart cycle — sub-millisecond latency confirms synchronous evidence capture before rotation
+- **Cross-cycle edges**: OOMKillEvidence events linked back to OOMKill events from prior restart cycles — latency reflects actual restart interval timing (10–30s), not processing delay
+
+Run the full breakdown across all 30 runs:
+
+```bash
+bash scripts/analyze-latency.sh
+```
+
+---
+
+## Stress Evaluation (Concurrent OOMKill Pods)
+
+We deployed 5, 10, and 20 simultaneous crash-looping pods on Minikube for 120 seconds each:
+
+| Pods | Events | Events/sec | Edges | Collector RAM | Collector CPU |
+|------|--------|-----------|-------|--------------|--------------|
+| 5    | 95     | 0.77      | 51    | 7.9 MB       | <0.1%        |
+| 10   | 175    | 1.43      | 90    | 8.2 MB       | <0.1%        |
+| 20   | 355    | 2.86      | 197   | 8.8 MB       | <0.1%        |
+
+Event ingestion scales **linearly** with pod count. Collector memory stays flat at
+8–9 MB regardless of load — the streaming JSONL model accumulates no in-memory state.
+
+---
+
+## What kubectl Cannot Do
 
 | Capability | kubectl | OMA |
 |-----------|---------|-----|
@@ -205,13 +253,19 @@ k8s-causal-memory/
 │   ├── 01-oomkill/         # P001: OOMKill causal chain
 │   ├── 02-configmap-env/   # P002: Env var silent misconfiguration
 │   └── 03-configmap-mount/ # P003: Volume mount symlink swap
+├── scripts/
+│   └── analyze-latency.sh  # Bimodal latency breakdown across 30 runs
 ├── docs/
 │   ├── architecture.md
 │   └── poc-results/        # Committed JSONL + query outputs (reproducible)
 │       ├── 01-oomkill/
 │       ├── 02-configmap-env/
 │       ├── 03-configmap-mount/
-│       └── aks-final/      # AKS 1.32.10 run
+│       ├── aks-final/      # AKS 1.32.10 run
+│       ├── latency-stats/  # 30-run statistical latency analysis
+│       └── stress-eval/    # 5/10/20 pod concurrent stress evaluation
+├── run-latency-stats.sh    # Automates 30-run latency collection
+├── run-stress-eval.sh      # Automates stress evaluation
 └── save-results.sh         # Preserve run output to docs/poc-results/
 ```
 
@@ -267,7 +321,7 @@ Additional pattern encoders, storage backends, and integration adapters are welc
 Pattern contributions should follow the existing structure in `collector/patterns/` and include:
 - A causal pattern definition (trigger, evidence, effect, temporal windows)
 - A scenario trigger script in `scenarios/`
-- Expected output in `scenarios/<name>/expected-output.json`
+- Expected output in `scenarios/<n>/expected-output.json`
 
 ---
 
