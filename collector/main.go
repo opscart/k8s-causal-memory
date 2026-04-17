@@ -45,7 +45,8 @@ func main() {
 	nodeW := watcher.NewNodeWatcher(client, emit)
 	podW := watcher.NewPodWatcher(client, *namespace, emit, nodeW)
 	cmW := watcher.NewConfigMapWatcher(client, *namespace, emit)
-	eventW := watcher.NewEventWatcher(client, *namespace, emit) // H2: scheduler event pruning
+	eventW := watcher.NewEventWatcher(client, *namespace, emit)         // H2: scheduler event pruning
+	ephemeralW := watcher.NewEphemeralWatcher(client, *namespace, emit) // H3: ephemeral container exit
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
@@ -54,11 +55,12 @@ func main() {
 	fmt.Println("[main] Press Ctrl+C to stop")
 	fmt.Println("----------------------------------------")
 
-	errCh := make(chan error, 4) // was 3, +1 for eventW
+	errCh := make(chan error, 5) // 3 original + 1 H2 + 1 H3
 	go func() { errCh <- nodeW.Watch(ctx) }()
 	go func() { errCh <- podW.Watch(ctx) }()
 	go func() { errCh <- cmW.Watch(ctx) }()
-	go func() { errCh <- eventW.Watch(ctx) }() // H2
+	go func() { errCh <- eventW.Watch(ctx) }()     // H2
+	go func() { errCh <- ephemeralW.Watch(ctx) }() // H3
 
 	select {
 	case <-ctx.Done():

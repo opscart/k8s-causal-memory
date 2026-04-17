@@ -1,0 +1,31 @@
+{
+  "scenario": "05-ephemeral-exit",
+  "pattern": "P005",
+  "horizon": "H3",
+  "description": "Ephemeral Container Evidence Loss — EphemeralContainerStatus has no lastState field",
+  "api_boundary": {
+    "spec": "Kubernetes API v1.32: EphemeralContainerStatus explicitly excludes lastState",
+    "log_content": "NOT_CAPTURABLE_VIA_API",
+    "explanation": "stdout/stderr only accessible via kubectl logs while container is running"
+  },
+  "expected_collector_event": {
+    "event_type": "EphemeralContainerTerminated",
+    "pattern_id": "P005",
+    "payload": {
+      "container_name": "oma-debug-<timestamp>",
+      "image": "busybox:1.36",
+      "target_container": "app",
+      "exit_code": 42,
+      "exit_class": "ERROR",
+      "duration_seconds": "~10.0",
+      "horizon": "H3",
+      "log_content": "NOT_CAPTURABLE_VIA_API",
+      "spec_exclusion": "EphemeralContainerStatus.lastState excluded by Kubernetes API spec"
+    }
+  },
+  "evidence_gap": {
+    "kubectl_logs_after_exit": "Error from server (NotFound): container not found",
+    "kubectl_describe_laststate": "(empty — no lastState field in EphemeralContainerStatus)",
+    "oma_ephemeral_exits_table": "exit_code=42, exit_class=ERROR, duration preserved"
+  }
+}
