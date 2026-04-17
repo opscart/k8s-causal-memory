@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: oma-scheduler
+  labels:
+    purpose: k8s-causal-memory-poc
+---
+# Phase 1: Unschedulable pod — triggers FailedScheduling events from default-scheduler.
+# 999Gi memory request cannot be satisfied on any minikube node.
+# These events will be pruned by kube-apiserver after --event-ttl (default 1h, demo: 2m).
+# OMA captures them before pruning.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: scheduler-unschedulable
+  namespace: oma-scheduler
+  labels:
+    app: scheduler-unschedulable
+    scenario: "04-scheduler-pruning"
+    phase: "unschedulable"
+spec:
+  restartPolicy: Never
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: ["sleep", "3600"]
+    resources:
+      requests:
+        memory: "999Gi"
+        cpu: "100m"
+      limits:
+        memory: "999Gi"
+        cpu: "100m"
+---
+# Phase 2: Schedulable victim — triggers Scheduled event, then OOMKills.
+# Demonstrates the cross-pattern chain: P004(Scheduled) → P001(OOMKill).
+# OMA answers: "Why was this pod placed on the node where it failed?"
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: scheduler-victim-config
+  namespace: oma-scheduler
+data:
+  app.env: "poc"
+  scenario: "04-scheduler-pruning"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: scheduler-victim
+  namespace: oma-scheduler
+  labels:
+    app: scheduler-victim
+    scenario: "04-scheduler-pruning"
+    phase: "schedulable"
+spec:
+  restartPolicy: Always
+  containers:
+  - name: app
+    image: polinux/stress
+    command: ["stress", "--vm", "1", "--vm-bytes", "128M", "--vm-hang", "0", "--timeout", "300s"]
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "50m"
+      limits:
+        memory: "64Mi"
+        cpu: "100m"
+    env:
+    - name: APP_ENV
+      valueFrom:
+        configMapKeyRef:
+          name: scheduler-victim-config
+          key: app.env

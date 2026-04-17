@@ -12,6 +12,7 @@ import argparse
 import sys
 import time
 from pathlib import Path
+from ingest_v2 import _insert_extended, _build_extended_edges
 
 DB_PATH = "memory.db"
 
@@ -80,6 +81,7 @@ def _insert_event(conn, e):
     """, (e["id"], e["timestamp"], e["event_type"], e.get("pattern_id", ""),
           e.get("pod_name", ""), e.get("namespace", ""), e.get("node_name", ""),
           e.get("pod_uid", ""), json.dumps(e.get("payload", {}))))
+    _insert_extended(conn, e)
 
 
 def _insert_snapshot(conn, s):
@@ -111,12 +113,15 @@ def _build_edges(conn, event):
                 pass
 
     if t == "OOMKillEvidence":
+        # Normalize timestamp to UTC-comparable string for SQLite
+        ts_clean = event["timestamp"][:19]  # strips to "2026-03-03T23:01:52"
         r = conn.execute("""
             SELECT id FROM events
             WHERE event_type='OOMKill' AND pod_name=? AND namespace=?
-              AND timestamp <= ? AND timestamp >= datetime(?,'-90 seconds')
+            AND substr(timestamp,1,19) <= ? 
+            AND substr(timestamp,1,19) >= datetime(?,'-90 seconds')
             ORDER BY timestamp DESC LIMIT 1
-        """, (event.get("pod_name",""), event.get("namespace",""), event["timestamp"], event["timestamp"])).fetchone()
+        """, (event.get("pod_name",""), event.get("namespace",""), ts_clean, ts_clean)).fetchone()
         if r:
             eid = f"{r['id']}->{event['id']}"
             try:
@@ -124,7 +129,7 @@ def _build_edges(conn, event):
                              (eid, r["id"], event["id"]))
             except sqlite3.IntegrityError:
                 pass
-
+    _build_extended_edges(conn, event)
 
 def watch_and_ingest(conn, output_dir):
     ep = Path(output_dir) / "events.jsonl"

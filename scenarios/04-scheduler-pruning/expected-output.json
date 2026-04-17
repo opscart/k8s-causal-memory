@@ -1,0 +1,51 @@
+{
+  "scenario": "04-scheduler-pruning",
+  "pattern": "P004",
+  "horizon": "H2",
+  "description": "Scheduler Decision Provenance — Events pruned at 1hr TTL / 1000-event cluster limit",
+  "expected_collector_events": {
+    "SchedulerEvent_FailedScheduling": {
+      "event_type": "SchedulerEvent",
+      "pattern_id": "P004",
+      "payload": {
+        "reason": "FailedScheduling",
+        "message": "0/1 nodes are available: 1 Insufficient memory. preemption: 0/1 nodes are available: 1 No preemption victims found for incoming pod.",
+        "pruning_risk": "LOW",
+        "horizon": "H2"
+      }
+    },
+    "SchedulerEvent_Scheduled": {
+      "event_type": "SchedulerEvent",
+      "pattern_id": "P004",
+      "payload": {
+        "reason": "Scheduled",
+        "message": "Successfully assigned oma-scheduler/scheduler-victim to minikube",
+        "pruning_risk": "LOW",
+        "horizon": "H2"
+      }
+    },
+    "OOMKill_cross_pattern": {
+      "event_type": "OOMKill",
+      "pattern_id": "P001",
+      "payload": {
+        "exit_code": 137,
+        "reason": "OOMKilled",
+        "resource_limits": {"memory": "64Mi"}
+      }
+    }
+  },
+  "evidence_gap": {
+    "after_ttl_expires": {
+      "kubectl_get_events": "No resources found in oma-scheduler namespace.",
+      "kubectl_describe_pod": "Error from server (NotFound): pods 'scheduler-unschedulable' not found",
+      "oma_scheduler_events_table": "full P004 chain preserved"
+    }
+  },
+  "cross_pattern_edge": {
+    "from": "P004 SchedulerEvent (Scheduled)",
+    "to": "P001 OOMKill",
+    "edge_type": "cross_pattern_P004_P001",
+    "confidence": 0.8,
+    "significance": "OMA can answer: why was this pod placed on the node where it OOMKilled?"
+  }
+}
