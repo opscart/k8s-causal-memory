@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: oma-sampling
+  labels:
+    purpose: k8s-causal-memory-poc
+---
+# Ghost pod: designed to OOMKill within ~7 seconds.
+# Default Prometheus scrape interval = 15s.
+# Entire pod lifecycle fits inside one scrape gap.
+#
+# Prometheus (poll-based):  0 data points — pod never scraped
+# OMA (event-driven):       full P001 causal chain captured
+#
+# This demonstrates the structural difference between poll-based
+# observability and event-driven causal memory.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ghost-pod-config
+  namespace: oma-sampling
+data:
+  app.env: "poc"
+  scenario: "06-sampling-bias"
+  expected.lifetime.seconds: "7"
+  scrape.interval.seconds: "15"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ghost-pod
+  namespace: oma-sampling
+  labels:
+    app: ghost-pod
+    scenario: "06-sampling-bias"
+  annotations:
+    oma/horizon: "H5"
+    oma/expected-lifetime: "7s"
+    oma/scrape-interval: "15s"
+    oma/expected-prometheus-datapoints: "0"
+spec:
+  restartPolicy: Never
+  containers:
+  - name: app
+    image: polinux/stress
+    command: ["stress", "--vm", "1", "--vm-bytes", "128M", "--vm-hang", "0", "--timeout", "10s"]
+    resources:
+      requests:
+        memory: "32Mi"
+        cpu: "25m"
+      limits:
+        memory: "64Mi"
+        cpu: "50m"
+    env:
+    - name: APP_ENV
+      valueFrom:
+        configMapKeyRef:
+          name: ghost-pod-config
+          key: app.env

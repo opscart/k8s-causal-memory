@@ -1,0 +1,39 @@
+{
+  "scenario": "06-sampling-bias",
+  "horizon": "H5",
+  "pattern": "P001",
+  "description": "Observability Sampling Bias — sub-scrape-interval pod invisible to Prometheus, fully captured by OMA",
+  "architecture_distinction": {
+    "prometheus": {
+      "architecture": "poll-based",
+      "scrape_interval_seconds": 15,
+      "pod_lifetime_seconds": "~7",
+      "result": "0 data points — pod never scraped",
+      "promql_evidence": [
+        "container_cpu_usage_seconds_total{pod='ghost-pod',namespace='oma-sampling'} → {}",
+        "kube_pod_container_status_last_terminated_reason{pod='ghost-pod'} → {}"
+      ]
+    },
+    "oma": {
+      "architecture": "event-driven (Kubernetes watch API)",
+      "capture_latency": "milliseconds",
+      "result": "full P001 causal chain preserved",
+      "note": "No sampling gap — every event delivered at occurrence"
+    }
+  },
+  "expected_oma_capture": {
+    "event_type": "OOMKill",
+    "pattern_id": "P001",
+    "payload": {
+      "exit_code": 137,
+      "reason": "OOMKilled",
+      "resource_limits": {"memory": "64Mi"},
+      "is_oomkill": true
+    }
+  },
+  "paper_contribution": {
+    "section": "3.5 Scrape-Based Observability Sampling Bias",
+    "claim": "Poll-based observability has a structural blind spot for sub-interval pod lifetimes. This is not a configuration issue — it is an architectural property.",
+    "table_row": "H5 | Per scrape interval | Poll-based architecture | Sub-interval pod lifetimes invisible to Prometheus | P001 (existing) — watch-based, no polling gap"
+  }
+}
