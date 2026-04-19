@@ -1,33 +1,68 @@
 # k8s-causal-memory
 
-**Operational Memory Architecture (OMA) for Kubernetes** — an open-source system that captures, stores, and queries causal event chains in Kubernetes clusters, preserving diagnostic context that the platform's native event retention model discards within 90 seconds.
+**Operational Memory Architecture (OMA) for Kubernetes** — an open-source system that captures, stores, and queries causal event chains in Kubernetes clusters, preserving diagnostic context that the platform's native evidence retention model discards on deterministic schedules.
 
 ---
 
 ## The Problem
 
-When a Kubernetes pod crashes, the platform gives you approximately **90 seconds** to capture the evidence before it's overwritten. The `LastTerminationState` field — which records the exact reason, exit code, and resource context of a container failure — is replaced the moment a new restart cycle begins.
+Kubernetes operates multiple evidence destruction mechanisms simultaneously. When a pod crashes, the platform gives you approximately **90 seconds** to capture the evidence before `LastTerminationState` is overwritten. Scheduler placement decisions are pruned within **1 hour**. Ephemeral debug container state is discarded the moment the session ends — with no `lastState` field in the API spec. Sub-scrape-interval pods are invisible to poll-based observability tools entirely.
 
 ```
-T=0s    OOMKill fires      ← exit_code=137, memory=64Mi, ConfigMap=oom-app-config
-T=15s   Pod restarts       ← LastTerminationState overwritten
-T=90s   kubectl describe   ← Error: evidence rotated, partial data only
-T+5min  On-call arrives    ← kubectl get pod: Error from server (NotFound)
+T=0s    OOMKill fires         ← exit_code=137, memory=64Mi, ConfigMap=oom-app-config
+T=15s   Pod restarts          ← LastTerminationState overwritten
+T=90s   kubectl describe      ← Error: evidence rotated, partial data only
+T+5min  On-call arrives       ← kubectl get pod: Error from server (NotFound)
+
+T=0m    FailedScheduling      ← "0/3 nodes available: 3 Insufficient memory"
+T+1hr   kubectl get events    ← No resources found in namespace
+
+T=0s    kubectl debug starts  ← ephemeral container attached
+T=10s   Debug session exits   ← exit_code=42, duration=10s
+T=10s   kubectl describe pod  ← no lastState field (excluded by API spec)
 ```
 
-Existing tools — Prometheus, Grafana, ELK — record *what* happened. None preserve the causal context linking *why* it happened, *which configuration was active*, or *what the cluster state was at the exact moment of failure*.
+Existing tools — Prometheus, Grafana, ELK — record *what* happened. None preserve the causal context linking *why* it happened, *which configuration was active*, *what the scheduler decided*, or *what a debug session found* at the exact moment of failure.
+
+---
+
+## Evidence Horizon Taxonomy
+
+OMA formalises five distinct evidence destruction mechanisms as **evidence horizons** — deterministic points after which diagnostic context becomes unrecoverable from the Kubernetes API:
+
+| Horizon | TTL | Mechanism | Data Lost | OMA Coverage |
+|---------|-----|-----------|-----------|--------------|
+| **H1** LastTerminationState | ~90s per restart | Pod restart overwrites field | Exit code, limits, ConfigMaps at kill time, node state | P001–P003 — full capture |
+| **H2** Scheduler Events | 1hr / 1000 cluster events | kube-apiserver TTL pruning | Placement decisions, predicate failures, node rejection reasons | P004 — full capture |
+| **H3** Ephemeral Container | Immediate on exit | API spec: no `lastState` field | Debug session exit code, duration, target container context | P005 — full capture |
+| **H4** Kubelet Restart Gap | Node restart duration | In-memory state not persisted | Pending volume ops, probe state, image pull progress | Theoretical — future work |
+| **H5** Scrape Interval Blind Spot | Per scrape interval | Poll-based collection architecture | Sub-interval pod lifetimes invisible to Prometheus | P001 (existing) — architectural distinction |
+
+### H3 Precise Claim
+
+The H3 claim is structural, not temporal. `EphemeralContainerStatus` has no `lastState` field by Kubernetes API spec (v1.32). A regular container's `ContainerStatus.lastState` records the prior termination and survives across restarts — this is how P001 captures OOMKill evidence. Ephemeral containers have no equivalent mechanism. Once a second debug session is attached, or the pod is rescheduled, the prior session's exit code, duration, and target container context are unrecoverable from the API.
+
+### H4 Scope
+
+H4 identifies the kubelet reconciliation gap as a fifth evidence horizon. When a kubelet restarts, it re-discovers running pods from the container runtime (CRI) but loses all transient in-memory state. Full causal capture requires a kubelet-level integration outside the current OMA architecture. H4 is documented as a theoretical horizon and identified as future work.
+
+### H5 Architectural Distinction
+
+H5 is not a new OMA pattern — it demonstrates OMA's existing structural advantage. Prometheus samples the world every N seconds; any pod whose entire lifetime falls within one scrape gap is architecturally invisible. OMA subscribes to the Kubernetes watch API; every event is delivered at occurrence with no sampling gap. This is a property of architecture, not configuration.
 
 ---
 
 ## What OMA Captures
 
-Three causal patterns encoded as first-class definitions:
+Five causal patterns encoded as first-class definitions:
 
 | Pattern | Trigger | What OMA Preserves |
 |---------|---------|-------------------|
 | **P001** OOMKill Chain | Container OOMKilled | Exit code, resource limits, ConfigMaps in effect, node state — frozen at kill time |
 | **P002** ConfigMap Env Var Stale | ConfigMap updated | Content hash delta, changed keys, list of pods still running with old values |
 | **P003** ConfigMap Mount Swap | ConfigMap updated | Kubelet symlink swap timestamp, propagation latency measurement |
+| **P004** Scheduler Provenance | Pod scheduling | FailedScheduling predicate failures, placement decision — before 1hr kube-apiserver TTL |
+| **P005** Ephemeral Exit | kubectl debug session ends | Exit code, duration, target container — `EphemeralContainerStatus` has no `lastState` field by API spec |
 
 ---
 
@@ -36,36 +71,38 @@ Three causal patterns encoded as first-class definitions:
 OMA comprises four layers:
 
 ```
-┌─────────────────────────────────────────────────────┐
-│              Kubernetes API Server                   │
-│        (Pod / Node / ConfigMap watch streams)        │
-└──────────────┬──────────────────┬───────────────────┘
-               │                  │
-┌──────────────▼──────────────────▼───────────────────┐
-│  Layer 1 — Go Collector (collector/)                 │
-│  PodWatcher │ NodeWatcher │ ConfigMapWatcher         │
-│  Captures events with full payload at moment of      │
-│  occurrence → output/events.jsonl                    │
-└──────────────────────────┬──────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                Kubernetes API Server                     │
+│   (Pod / Node / ConfigMap / Event watch streams)         │
+└──────────┬───────────────────────────┬───────────────────┘
+           │                           │
+┌──────────▼───────────────────────────▼───────────────────┐
+│  Layer 1 — Go Collector (collector/)                      │
+│  PodWatcher     │ NodeWatcher    │ ConfigMapWatcher        │
+│  EventWatcher (H2) │ EphemeralWatcher (H3)                │
+│  Captures events with full payload at moment of           │
+│  occurrence → output/events.jsonl                         │
+└──────────────────────────┬────────────────────────────────┘
                            │
-┌──────────────────────────▼──────────────────────────┐
-│  Layer 2 — Operational Memory Store (storage/)       │
-│  SQLite (WAL mode) — 4 tables:                       │
-│  events │ causal_edges │ snapshots │ patterns        │
-│  Causal edges built automatically on ingest          │
-└──────────────────────────┬──────────────────────────┘
+┌──────────────────────────▼────────────────────────────────┐
+│  Layer 2 — Operational Memory Store (storage/)            │
+│  SQLite (WAL mode) — 6 tables:                            │
+│  events │ causal_edges │ snapshots │ patterns             │
+│  scheduler_events (H2) │ ephemeral_exits (H3)             │
+│  Causal edges built automatically on ingest               │
+└──────────────────────────┬────────────────────────────────┘
                            │
-┌──────────────────────────▼──────────────────────────┐
-│  Layer 3 — Query Interface (storage/query.py)        │
-│  Q1: causal-chain   "What caused this failure?"      │
-│  Q2: pattern-history "Has this happened before?"     │
-│  Q3: state-at       "What was the state at time T?"  │
-└──────────────────────────┬──────────────────────────┘
+┌──────────────────────────▼────────────────────────────────┐
+│  Layer 3 — Query Interface (storage/query.py)             │
+│  Q1: causal-chain    "What caused this failure?"          │
+│  Q2: pattern-history "Has this happened before?"          │
+│  Q3: state-at        "What was the state at time T?"      │
+└──────────────────────────┬────────────────────────────────┘
                            │
-┌──────────────────────────▼──────────────────────────┐
-│  Layer 4 — Integration Surface (storage/api.py)      │
-│  REST API │ Alert webhooks │ AI diagnosis integrations│
-└─────────────────────────────────────────────────────┘
+┌──────────────────────────▼────────────────────────────────┐
+│  Layer 4 — Integration Surface (storage/api.py)           │
+│  REST API │ Alert webhooks │ AI diagnosis integrations     │
+└────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -86,6 +123,14 @@ cd collector
 go build -o bin/collector .
 ```
 
+### Apply Storage Schema
+
+```bash
+sqlite3 storage/memory.db < storage/schema.sql     # base schema
+sqlite3 storage/memory.db < storage/schema_v2.sql  # H2: scheduler_events table
+sqlite3 storage/memory.db < storage/schema_v3.sql  # H3: ephemeral_exits table
+```
+
 ### Run a Scenario
 
 **Terminal 1 — Start the collector:**
@@ -104,7 +149,6 @@ bash scenarios/01-oomkill/trigger.sh
 cd storage
 pip install -r requirements.txt
 python ingest.py --events ../output/events.jsonl --snapshots ../output/snapshots.jsonl
-python query.py summary
 python query.py causal-chain --pod <pod-name> --namespace oma-demo
 python query.py pattern-history --pattern P001
 ```
@@ -113,9 +157,9 @@ python query.py pattern-history --pattern P001
 
 ## Proof of Concept Results
 
-All results are reproducible from the JSONL files committed in `docs/poc-results/`. The collector was run on two independent cluster environments.
+All results are reproducible from the JSONL files committed in `docs/poc-results/`. The collector was run across two independent cluster environments.
 
-### Environment 1 — Minikube (local, 3 nodes)
+### Environment 1 — Minikube (local, 3 nodes: opscart, opscart-m02, opscart-m03)
 
 **Scenario 01: OOMKill Causal Chain (P001)**
 
@@ -142,8 +186,60 @@ ConfigMapChanged  app-feature-config
 
 Pod status after change:
   config-consumer-env-*: FEATURE_FLAG=disabled  ← STALE (ConfigMap now: enabled)
-  config-consumer-env-*: FEATURE_FLAG=disabled  ← STALE
   Restart count: 0  (no restart triggered — this is the bug)
+```
+
+**Scenario 04: Scheduler Decision Provenance (P004) — H2**
+
+```
+SchedulerEvents captured: 2  |  Cross-pattern edges: 1 (P004→P001, conf=0.8)
+
+FailedScheduling  2026-04-17T16:29:01Z
+  Message: 0/3 nodes are available: 3 Insufficient memory.
+           preemption: 0/3 nodes are available: 3 Preemption is not helpful.
+  pruning_risk: LOW
+  evidence_expires: 2026-04-17T17:29:01Z
+
+Scheduled  2026-04-17T16:29:01Z → opscart-m02
+
+OOMKill (P001)  2026-04-17T16:29:31Z  ← cross-pattern P004→P001, conf=0.8
+  exit_code=137  memory_limit=64Mi  node=opscart-m02
+
+After 2min TTL:
+  kubectl get events -n oma-scheduler → No resources found
+  OMA scheduler_events table          → full chain preserved
+```
+
+**Scenario 05: Ephemeral Container Evidence Loss (P005) — H3**
+
+```
+EphemeralContainerTerminated  2026-04-17T16:43:46Z
+  container:        oma-debug-1776446626
+  target_container: app
+  exit_code:        42
+  exit_class:       ERROR
+  duration_seconds: 10.0
+  node:             opscart-m02
+  log_content:      NOT_CAPTURABLE_VIA_API
+
+kubectl describe pod | grep lastState → (empty — no lastState field in spec)
+OMA ephemeral_exits table            → full record preserved
+```
+
+**Scenario 06: Sampling Bias — H5**
+
+```
+Pod lifetime: 6s  |  Prometheus scrape interval: 15s
+
+ghost-pod OOMKilled at T+5s (exit_code=137, node=opscart-m03)
+
+Prometheus (poll-based):
+  container_cpu_usage_seconds_total{pod="ghost-pod"} → {} (0 data points)
+  Pod never scraped — lifetime < scrape interval
+
+OMA (event-driven):
+  OOMKill P001 captured at occurrence
+  exit_code=137  node=opscart-m03
 ```
 
 ### Environment 2 — Azure Kubernetes Service (AKS 1.32.10, 2× Standard_B2s)
@@ -185,8 +281,7 @@ Q3 Point-in-Time Snapshot:
 
 ## Statistical Latency Analysis (30 Runs)
 
-To quantify causal edge construction latency, we ran the P001 OOMKill scenario
-30 independent times on Minikube, yielding 242 total causal edges.
+To quantify causal edge construction latency, we ran the P001 OOMKill scenario 30 independent times on Minikube, yielding 242 total causal edges.
 
 The distribution is **bimodal**, reflecting two structurally distinct edge types:
 
@@ -197,8 +292,6 @@ The distribution is **bimodal**, reflecting two structurally distinct edge types
 
 - **Intra-cycle edges**: OOMKillEvidence captured within the same restart cycle — sub-millisecond latency confirms synchronous evidence capture before rotation
 - **Cross-cycle edges**: OOMKillEvidence events linked back to OOMKill events from prior restart cycles — latency reflects actual restart interval timing (10–30s), not processing delay
-
-Run the full breakdown across all 30 runs:
 
 ```bash
 bash scripts/analyze-latency.sh
@@ -216,8 +309,7 @@ We deployed 5, 10, and 20 simultaneous crash-looping pods on Minikube for 120 se
 | 10   | 175    | 1.43      | 90    | 8.2 MB       | <0.1%        |
 | 20   | 355    | 2.86      | 197   | 8.8 MB       | <0.1%        |
 
-Event ingestion scales **linearly** with pod count. Collector memory stays flat at
-8–9 MB regardless of load — the streaming JSONL model accumulates no in-memory state.
+Event ingestion scales **linearly** with pod count. Collector memory stays flat at 8–9 MB regardless of load — the streaming JSONL model accumulates no in-memory state.
 
 ---
 
@@ -232,6 +324,9 @@ Event ingestion scales **linearly** with pod count. Collector memory stays flat 
 | State of deleted objects | `Error (NotFound)` | Q3 state-at query |
 | Causal chain reconstruction | Not possible | Q1 with edges |
 | Pattern recurrence detection | Not possible | Q2 with escalation |
+| Scheduler placement rationale | Lost after 1hr TTL | P004 — predicate failures and placement decision preserved |
+| Ephemeral container exit code | No `lastState` field by API spec | P005 — exit code, duration, target container captured at termination |
+| Sub-scrape-interval pod data | Never scraped by Prometheus | P001 — watch-based, no polling gap |
 
 ---
 
@@ -239,41 +334,62 @@ Event ingestion scales **linearly** with pod count. Collector memory stays flat 
 
 ```
 k8s-causal-memory/
-├── collector/              # Go Kubernetes event collector
+├── collector/                    # Go Kubernetes event collector
 │   ├── main.go
-│   ├── watcher/            # Pod, Node, ConfigMap watchers
-│   ├── patterns/           # P001, P002, P003 encoders
-│   └── emitter/            # JSONL output
-├── storage/                # Python storage and query layer
-│   ├── schema.sql          # SQLite schema (4 tables)
-│   ├── ingest.py           # JSONL → SQLite + causal edge construction
-│   ├── query.py            # Q1 / Q2 / Q3 canonical queries
-│   └── api.py              # REST API (Layer 4)
+│   ├── watcher/
+│   │   ├── pod_watcher.go        # P001–P003: pod lifecycle
+│   │   ├── node_watcher.go       # node state snapshots
+│   │   ├── configmap_watcher.go  # P002–P003: ConfigMap changes
+│   │   ├── event_watcher.go      # P004: scheduler event pruning (H2)
+│   │   └── ephemeral_watcher.go  # P005: ephemeral container exit (H3)
+│   ├── patterns/
+│   │   ├── patterns.go           # CausalPattern / PatternStep types
+│   │   ├── oomkill.go            # P001
+│   │   ├── configmap_env.go      # P002
+│   │   ├── configmap_mount.go    # P003
+│   │   ├── p004_scheduler.go     # P004 (H2)
+│   │   └── p005_ephemeral.go     # P005 (H3)
+│   └── emitter/
+│       └── json_emitter.go       # thread-safe JSONL output
+├── storage/                      # Python storage and query layer
+│   ├── schema.sql                # Base schema (events, causal_edges, snapshots, patterns)
+│   ├── schema_v2.sql             # H2 migration: scheduler_events table
+│   ├── schema_v3.sql             # H3 migration: ephemeral_exits table
+│   ├── ingest.py                 # JSONL → SQLite + causal edge construction
+│   ├── ingest_v2.py              # P004 and P005 extended ingestion
+│   ├── query.py                  # Q1 / Q2 / Q3 canonical queries
+│   └── api.py                    # REST API (Layer 4)
 ├── scenarios/
-│   ├── 01-oomkill/         # P001: OOMKill causal chain
-│   ├── 02-configmap-env/   # P002: Env var silent misconfiguration
-│   └── 03-configmap-mount/ # P003: Volume mount symlink swap
-├── scripts/
-│   └── analyze-latency.sh  # Bimodal latency breakdown across 30 runs
+│   ├── 01-oomkill/               # P001: OOMKill causal chain (H1)
+│   ├── 02-configmap-env/         # P002: Env var silent misconfiguration (H1)
+│   ├── 03-configmap-mount/       # P003: Volume mount symlink swap (H1)
+│   ├── 04-scheduler-pruning/     # P004: Scheduler decision provenance (H2)
+│   ├── 05-ephemeral-exit/        # P005: Ephemeral container evidence loss (H3)
+│   └── 06-sampling-bias/         # H5: Observability sampling bias (analysis)
 ├── docs/
 │   ├── architecture.md
-│   └── poc-results/        # Committed JSONL + query outputs (reproducible)
+│   └── poc-results/
 │       ├── 01-oomkill/
 │       ├── 02-configmap-env/
 │       ├── 03-configmap-mount/
-│       ├── aks-final/      # AKS 1.32.10 run
-│       ├── latency-stats/  # 30-run statistical latency analysis
-│       └── stress-eval/    # 5/10/20 pod concurrent stress evaluation
-├── run-latency-stats.sh    # Automates 30-run latency collection
-├── run-stress-eval.sh      # Automates stress evaluation
-└── save-results.sh         # Preserve run output to docs/poc-results/
+│       ├── 04-scheduler-pruning/  # H2: screenshots + sqlite query output
+│       ├── 05-ephemeral-exits/    # H3: screenshots + sqlite query output
+│       ├── 06-sampling-bias/      # H5: screenshots
+│       ├── aks-final/             # AKS 1.32.10 run
+│       ├── latency-stats/         # 30-run statistical latency analysis
+│       └── stress-eval/           # 5/10/20 pod concurrent stress evaluation
+├── scripts/
+│   └── analyze-latency.sh
+├── run-latency-stats.sh
+├── run-stress-eval.sh
+└── save-results.sh
 ```
 
 ---
 
 ## Scenarios
 
-### Scenario 01: OOMKill (P001)
+### Scenario 01: OOMKill (P001) — H1
 
 Deploys a pod with a 64Mi memory limit configured to allocate 128Mi. Captures the full OOMKill causal chain before the 90-second evidence horizon.
 
@@ -281,7 +397,7 @@ Deploys a pod with a 64Mi memory limit configured to allocate 128Mi. Captures th
 bash scenarios/01-oomkill/trigger.sh
 ```
 
-### Scenario 02: ConfigMap Env Var Stale Config (P002)
+### Scenario 02: ConfigMap Env Var Stale Config (P002) — H1
 
 Deploys 2 pods consuming a ConfigMap as environment variables. Updates the ConfigMap and proves pods continue running with stale values — zero restarts, zero awareness.
 
@@ -289,13 +405,43 @@ Deploys 2 pods consuming a ConfigMap as environment variables. Updates the Confi
 bash scenarios/02-configmap-env/trigger.sh
 ```
 
-### Scenario 03: ConfigMap Volume Mount Propagation (P003)
+### Scenario 03: ConfigMap Volume Mount Propagation (P003) — H1
 
 Deploys a pod consuming a ConfigMap as a volume mount. Measures kubelet symlink swap propagation latency after a ConfigMap update.
 
 ```bash
 bash scenarios/03-configmap-mount/trigger.sh
 ```
+
+### Scenario 04: Scheduler Decision Provenance (P004) — H2
+
+Deploys an unschedulable pod (999Gi request) triggering `FailedScheduling` events, then a schedulable victim that OOMKills. Demonstrates the cross-pattern chain P004→P001 and proves OMA preserves scheduler decisions after the kube-apiserver event TTL expires.
+
+```bash
+# Short TTL makes the evidence gap demonstrable in minutes
+minikube start --extra-config=apiserver.event-ttl=2m
+bash scenarios/04-scheduler-pruning/trigger.sh
+```
+
+### Scenario 05: Ephemeral Container Evidence Loss (P005) — H3
+
+Deploys a stable target pod and attaches a `kubectl debug` ephemeral container that runs for 10 seconds and exits with code 42. Demonstrates that `EphemeralContainerStatus` has no `lastState` field — OMA is the only mechanism that preserves exit code, duration, and target container context after the session ends.
+
+```bash
+bash scenarios/05-ephemeral-exit/trigger.sh
+```
+
+### Scenario 06: Observability Sampling Bias — H5
+
+Deploys a ghost pod designed to OOMKill within 6 seconds — inside one 15-second Prometheus scrape interval. Demonstrates the structural blind spot of poll-based observability. No new OMA pattern is required: existing P001 capture proves the architectural distinction.
+
+```bash
+bash scenarios/06-sampling-bias/trigger.sh
+```
+
+### H4: Kubelet Restart Gap — Theoretical
+
+H4 is documented as a theoretical evidence horizon in the taxonomy above. Kubelet in-memory state loss during node restart requires a kubelet-level integration outside the current OMA architecture. No scenario is provided for H4. Future work.
 
 ---
 
@@ -306,10 +452,22 @@ bash scenarios/03-configmap-mount/trigger.sh
 python query.py causal-chain --pod <pod-name> --namespace oma-demo
 
 # Q2: Has this pattern occurred before? (recurrence detection)
-python query.py pattern-history --pattern P001  # or P002, P003
+python query.py pattern-history --pattern P001  # or P002, P003, P004, P005
 
 # Q3: What was the cluster state at time T? (point-in-time, even after deletion)
 python query.py state-at --kind Pod --name <pod-name> --namespace oma-demo --at "2026-03-01T17:19:44"
+
+# H2: Scheduler provenance (survives event TTL)
+sqlite3 storage/memory.db \
+  'SELECT reason, message, pruning_risk, timestamp FROM scheduler_events ORDER BY timestamp;'
+
+# H2: Cross-pattern causal edges
+sqlite3 storage/memory.db \
+  "SELECT id, pattern_id, confidence, edge_type FROM causal_edges WHERE pattern_id='P004';"
+
+# H3: Ephemeral exit records (no lastState in API spec)
+sqlite3 storage/memory.db \
+  'SELECT container_name, target_container, exit_code, exit_class, duration_seconds FROM ephemeral_exits;'
 ```
 
 ---
@@ -331,4 +489,4 @@ MIT License — see [LICENSE](LICENSE).
 
 ---
 
-*Built and validated on Minikube and Azure Kubernetes Service 1.32.10.*
+*Built and validated on Minikube (3-node, arm64) and Azure Kubernetes Service 1.32.10.*
