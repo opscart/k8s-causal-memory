@@ -26,6 +26,19 @@ Existing tools — Prometheus, Grafana, ELK — record *what* happened. None pre
 
 ---
 
+## Research & Coverage
+
+| Resource | Link |
+|---|---|
+| Research preprint (V1 — H1) | [Zenodo DOI: 10.5281/zenodo.19685352](https://doi.org/10.5281/zenodo.19685352) |
+| Extended paper (H1–H5) | [arXiv submit/7506671](https://arxiv.org/abs/submit/7506671) |
+| OpsCart canonical article | [Beyond the 90-Second Gap](https://opscart.com/kubernetes-evidence-horizons-h2-h3-h4-h5/) |
+| OpsCart H1 article | [The 90-Second Evidence Gap](https://opscart.com/when-kubernetes-forgets-the-90-second-evidence-gap/) |
+| DZone article (H5) | [The Pod Prometheus Never Saw](https://dzone.com/articles/the-pod-prometheus-never-saw) |
+| CNCF Blog (H3) | Pending publication |
+
+---
+
 ## Evidence Horizon Taxonomy
 
 OMA formalises five distinct evidence destruction mechanisms as **evidence horizons** — deterministic points after which diagnostic context becomes unrecoverable from the Kubernetes API:
