@@ -47,20 +47,41 @@ START_EPOCH=$(date +%s)
 echo -e "  Start time: ${START_TIME}"
 
 # ── Watch pod lifecycle ───────────────────────────────────────────────────
-echo -e "\n${YELLOW}[2/5] Watching ghost pod lifecycle (expecting OOMKill in ~7s)...${NC}"
-ELAPSED=0
-LIFETIME=0
+echo -e "\n${YELLOW}[2/5] Watching ghost pod lifecycle...${NC}"
 OOMKILLED=false
-for i in $(seq 1 20); do
+LIFETIME=0
+
+# Phase 1 — wait for Running (up to 300s)
+echo -e "  Phase 1: waiting for pod to reach Running state (up to 300s)..."
+for i in $(seq 1 300); do
   sleep 1
-  ELAPSED=$((ELAPSED + 1))
   STATUS=$(kubectl get pod ghost-pod -n "$NAMESPACE" \
     -o jsonpath='{.status.phase}' 2>/dev/null || echo "Gone")
+  printf "\r  Startup T+%03ds  phase=%-20s" "$i" "$STATUS"
+  if [ "$STATUS" = "Running" ]; then
+    echo ""
+    echo -e "${GREEN}  ✓ Pod Running at T+${i}s from deployment${NC}"
+    break
+  fi
+  if [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Gone" ]; then
+    echo ""
+    break
+  fi
+done
+
+# Phase 2 — wait for OOMKill (up to 120s from Running)
+echo -e "  Phase 2: waiting for OOMKill (up to 120s)..."
+RUN_START=$(date +%s)
+for i in $(seq 1 120); do
+  sleep 1
   REASON=$(kubectl get pod ghost-pod -n "$NAMESPACE" \
-    -o jsonpath='{.status.containerStatuses[0].state.terminated.reason}' 2>/dev/null || echo "")
-  printf "\r  T+%02ds  phase=%-10s reason=%-12s" "$ELAPSED" "$STATUS" "${REASON:-running}"
+    -o jsonpath='{.status.containerStatuses[0].state.terminated.reason}' \
+    2>/dev/null || echo "")
+  STATUS=$(kubectl get pod ghost-pod -n "$NAMESPACE" \
+    -o jsonpath='{.status.phase}' 2>/dev/null || echo "Gone")
+  printf "\r  OOMKill watch T+%03ds  reason=%-15s" "$i" "${REASON:-waiting}"
   if [ "$REASON" = "OOMKilled" ] || [ "$STATUS" = "Failed" ]; then
-    LIFETIME=$ELAPSED
+    LIFETIME=$i
     OOMKILLED=true
     echo ""
     break
@@ -68,32 +89,30 @@ for i in $(seq 1 20); do
 done
 echo ""
 
-END_EPOCH=$(date +%s)
-LIFETIME=$((END_EPOCH - START_EPOCH))
-
 if [ "$OOMKILLED" = true ]; then
-  echo -e "${GREEN}  ✓ OOMKill confirmed in ~${LIFETIME}s${NC}"
+  echo -e "${GREEN}  ✓ OOMKill confirmed in ~${LIFETIME}s after Running${NC}"
 else
-  echo -e "${YELLOW}  Pod may still be running or already gone${NC}"
+  echo -e "${YELLOW}  OOMKill not observed in watch window${NC}"
 fi
-
 # ── The structural argument ───────────────────────────────────────────────
 echo -e "\n${YELLOW}[3/5] H5 Evidence gap — poll vs event-driven:${NC}"
 echo ""
-echo -e "  Pod lifetime:      ~${LIFETIME}s"
-echo -e "  Scrape interval:   ${SCRAPE_INTERVAL}s"
+echo -e "  Pod running lifetime: ~${LIFETIME}s"
+echo -e "  Scrape interval:      ${SCRAPE_INTERVAL}s"
 echo ""
-if [ "$LIFETIME" -lt "$SCRAPE_INTERVAL" ]; then
-  echo -e "  ${RED}Pod lifetime (${LIFETIME}s) < scrape interval (${SCRAPE_INTERVAL}s)${NC}"
-  echo -e "  ${RED}→ Prometheus would return 0 data points for this pod${NC}"
-  echo ""
-  echo -e "  PromQL that returns empty:"
-  echo -e "  ${CYAN}  container_cpu_usage_seconds_total{pod=\"ghost-pod\",namespace=\"oma-sampling\"}${NC}"
-  echo -e "  ${CYAN}  kube_pod_container_status_last_terminated_reason{pod=\"ghost-pod\"}${NC}"
-  echo -e "  ${CYAN}  Result: {} (no data — pod never scraped)${NC}"
+echo -e "  ${CYAN}Prometheus HTTP API query (issued after pod exit):${NC}"
+echo -e "  ${CYAN}  container_cpu_usage_seconds_total{pod=\"ghost-pod\"}${NC}"
+
+PROM_RESULT=$(curl -s --max-time 5 \
+  "http://localhost:9090/api/v1/query?query=container_cpu_usage_seconds_total%7Bpod%3D%22ghost-pod%22%7D" \
+  2>/dev/null || echo "")
+
+if echo "$PROM_RESULT" | grep -q '"result":\[\]'; then
+  echo -e "  ${RED}  Result: [] — zero data points confirmed${NC}"
+  PROM_EMPTY=true
 else
-  echo -e "  ${YELLOW}  Pod took ${LIFETIME}s — may have been scraped once.${NC}"
-  echo -e "  ${YELLOW}  Re-run for a tighter demonstration.${NC}"
+  echo -e "  ${YELLOW}  Result: $PROM_RESULT${NC}"
+  PROM_EMPTY=false
 fi
 
 echo ""
