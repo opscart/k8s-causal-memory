@@ -31,8 +31,8 @@ Existing tools — Prometheus, Grafana, ELK — record *what* happened. None pre
 | Resource | Link |
 |---|---|
 | Research preprint (V1 — H1) | [Zenodo DOI: 10.5281/zenodo.19685352](https://doi.org/10.5281/zenodo.19685352) |
-| Extended paper (H1–H5) | [arXiv:2605.18755](https://arxiv.org/abs/2605.18755) |
-| Peer review (IEEE Access) | Manuscript ID: Access-2026-23676 (under review) |
+| Extended paper (H1–H5) | [arXiv:2605.18755](https://arxiv.org/abs/2607.02528) |
+| Peer review (IEEE Access) | Manuscript ID: Access-2026-31664 — accepted for publication July 25, 2026
 | OpsCart canonical article | [Beyond the 90-Second Gap](https://opscart.com/kubernetes-evidence-horizons-h2-h3-h4-h5/) |
 | OpsCart H1 article | [The 90-Second Evidence Gap](https://opscart.com/when-kubernetes-forgets-the-90-second-evidence-gap/) |
 | DZone article (H5) | [The Pod Prometheus Never Saw](https://dzone.com/articles/k8s-sampling-blind-spot) |
